@@ -1,0 +1,286 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3 class="page-title">Edit Student</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'students:student_list' %}">Students</a></li>
+                        <li class="breadcrumb-item active">Edit Student</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        <form method="post" enctype="multipart/form-data" id="editStudentForm">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title">Student Information</h5>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>First Name</label>
+                                        <input type="text" class="form-control" name="first_name" value="{{ form_data.first_name|default:student.first_name }}" required>
+                                        {% if errors.first_name %}
+                                            <small class="text-danger">{{ errors.first_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Last Name</label>
+                                        <input type="text" class="form-control" name="last_name" value="{{ form_data.last_name|default:student.last_name }}" required>
+                                        {% if errors.last_name %}
+                                            <small class="text-danger">{{ errors.last_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Student Email</label>
+                                        <input type="email" class="form-control" name="student_email" value="{{ form_data.student_email|default:student.email }}" required>
+                                        {% if errors.student_email %}
+                                            <small class="text-danger">{{ errors.student_email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Gender</label>
+                                        <select class="form-control" name="gender" required>
+                                            <option value="">Select Gender</option>
+                                            <option value="Male" {% if form_data.gender|default:student.gender == 'Male' %}selected{% endif %}>Male</option>
+                                            <option value="Female" {% if form_data.gender|default:student.gender == 'Female' %}selected{% endif %}>Female</option>
+                                            <option value="Others" {% if form_data.gender|default:student.gender == 'Others' %}selected{% endif %}>Others</option>
+                                        </select>
+                                        {% if errors.gender %}
+                                            <small class="text-danger">{{ errors.gender }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Date of Birth</label>
+                                        <input type="date" class="form-control" name="date_of_birth" value="{{ form_data.date_of_birth|default:student.date_of_birth|date:'Y-m-d' }}" required>
+                                        {% if errors.date_of_birth %}
+                                            <small class="text-danger">{{ errors.date_of_birth }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Class</label>
+                                        <input type="text" class="form-control" name="student_class" value="{{ form_data.student_class|default:student.student_class }}" required>
+                                        {% if errors.student_class %}
+                                            <small class="text-danger">{{ errors.student_class }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Religion</label>
+                                        <input type="text" class="form-control" name="religion" value="{{ form_data.religion|default:student.religion }}" required>
+                                        {% if errors.religion %}
+                                            <small class="text-danger">{{ errors.religion }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Joining Date</label>
+                                        <input type="date" class="form-control" name="joining_date" value="{{ form_data.joining_date|default:student.joining_date|date:'Y-m-d' }}" required>
+                                        {% if errors.joining_date %}
+                                            <small class="text-danger">{{ errors.joining_date }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Mobile Number</label>
+                                        <input type="text" class="form-control" name="mobile_number" value="{{ form_data.mobile_number|default:student.mobile_number }}" required>
+                                        {% if errors.mobile_number %}
+                                            <small class="text-danger">{{ errors.mobile_number }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Admission Number</label>
+                                        <input type="text" class="form-control" name="admission_number" value="{{ form_data.admission_number|default:student.admission_number }}" required>
+                                        {% if errors.admission_number %}
+                                            <small class="text-danger">{{ errors.admission_number }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Section</label>
+                                        <input type="text" class="form-control" name="section" value="{{ form_data.section|default:student.section }}" required>
+                                        {% if errors.section %}
+                                            <small class="text-danger">{{ errors.section }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Student Image</label>
+                                        <input type="file" class="form-control" name="student_image">
+                                        {% if student.student_image %}
+                                            <small>Current: <a href="{{ student.student_image.url }}" target="_blank">View Image</a></small>
+                                        {% endif %}
+                                        {% if errors.student_image %}
+                                            <small class="text-danger">{{ errors.student_image }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Reset Password</label>
+                                        <input type="hidden" name="reset_password" id="resetPasswordInput" value="">
+                                        <button type="button" class="btn btn-warning" id="resetPasswordBtn">Reset Password to Default (student@1234)</button>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <h5 class="form-title">Parent Information</h5>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Father's Name</label>
+                                        <input type="text" class="form-control" name="father_name" value="{{ form_data.father_name|default:parent.father_name }}" required>
+                                        {% if errors.father_name %}
+                                            <small class="text-danger">{{ errors.father_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Father's Occupation</label>
+                                        <input type="text" class="form-control" name="father_occupation" value="{{ form_data.father_occupation|default:parent.father_occupation }}">
+                                        {% if errors.father_occupation %}
+                                            <small class="text-danger">{{ errors.father_occupation }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Father's Mobile</label>
+                                        <input type="text" class="form-control" name="father_mobile" value="{{ form_data.father_mobile|default:parent.father_mobile }}" required>
+                                        {% if errors.father_mobile %}
+                                            <small class="text-danger">{{ errors.father_mobile }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Father's Email</label>
+                                        <input type="email" class="form-control" name="father_email" value="{{ form_data.father_email|default:parent.father_email }}" required>
+                                        {% if errors.father_email %}
+                                            <small class="text-danger">{{ errors.father_email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Mother's Name</label>
+                                        <input type="text" class="form-control" name="mother_name" value="{{ form_data.mother_name|default:parent.mother_name }}" required>
+                                        {% if errors.mother_name %}
+                                            <small class="text-danger">{{ errors.mother_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Mother's Occupation</label>
+                                        <input type="text" class="form-control" name="mother_occupation" value="{{ form_data.mother_occupation|default:parent.mother_occupation }}">
+                                        {% if errors.mother_occupation %}
+                                            <small class="text-danger">{{ errors.mother_occupation }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Mother's Mobile</label>
+                                        <input type="text" class="form-control" name="mother_mobile" value="{{ form_data.mother_mobile|default:parent.mother_mobile }}" required>
+                                        {% if errors.mother_mobile %}
+                                            <small class="text-danger">{{ errors.mother_mobile }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Mother's Email</label>
+                                        <input type="email" class="form-control" name="mother_email" value="{{ form_data.mother_email|default:parent.mother_email }}" required>
+                                        {% if errors.mother_email %}
+                                            <small class="text-danger">{{ errors.mother_email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Present Address</label>
+                                        <textarea class="form-control" name="present_address" required>{{ form_data.present_address|default:parent.present_address }}</textarea>
+                                        {% if errors.present_address %}
+                                            <small class="text-danger">{{ errors.present_address }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Permanent Address</label>
+                                        <textarea class="form-control" name="permanent_address" required>{{ form_data.permanent_address|default:parent.permanent_address }}</textarea>
+                                        {% if errors.permanent_address %}
+                                            <small class="text-danger">{{ errors.permanent_address }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        $('#resetPasswordBtn').click(function() {
+            if (confirm("Are you sure you want to reset the password to the default 'student@1234'?")) {
+                $('#resetPasswordInput').val('1');
+                $('#editStudentForm').submit();
+            }
+        });
+    });
+</script>
+{% endblock %}

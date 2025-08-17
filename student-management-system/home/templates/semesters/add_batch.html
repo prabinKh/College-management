@@ -1,0 +1,71 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block title %}Add Batch - {{ semester.semester_name }}{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Add Batch - {{ semester.semester_name }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_list' %}">Semesters</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_detail' semester.slug %}">{{ semester.semester_name }}</a></li>
+                        <li class="breadcrumb-item active">Add Batch</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not user.is_authenticated %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            You are not logged in. Please <a href="{% url 'login' %}?next={{ request.path }}">log in</a> to add a batch.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">New Batch</h4>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="batch_name" class="form-label">Batch Name</label>
+                        <input type="text" class="form-control" id="batch_name" name="batch_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="max_students" class="form-label">Max Students</label>
+                        <input type="number" class="form-control" id="max_students" name="max_students" value="50" min="1">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Batch</button>
+                    <a href="{% url 'semesters:manage_batches' semester.slug %}" class="btn btn-secondary">Cancel</a>
+                </form>
+                {% else %}
+                <p class="text-warning">Please log in to add a batch.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { margin-bottom: 1.5rem; }
+</style>
+{% endblock %}

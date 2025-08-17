@@ -1,0 +1,88 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3 class="page-title">Edit Subject</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">Subjects</a></li>
+                        <li class="breadcrumb-item active">Edit Subject</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title">Subject Information</h5>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Subject Name</label>
+                                        <input type="text" class="form-control" name="subject_name" value="{{ form_data.subject_name|default:'' }}">
+                                        {% if errors.subject_name %}
+                                        <small class="text-danger">{{ errors.subject_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Class Name</label>
+                                        <input type="text" class="form-control" name="class_name" value="{{ form_data.class_name|default:'' }}">
+                                        {% if errors.class_name %}
+                                        <small class="text-danger">{{ errors.class_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea class="form-control" name="description">{{ form_data.description|default:'' }}</textarea>
+                                        {% if errors.description %}
+                                        <small class="text-danger">{{ errors.description }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Credits</label>
+                                        <input type="number" class="form-control" name="credits" value="{{ form_data.credits|default:'1' }}" min="1">
+                                        {% if errors.credits %}
+                                        <small class="text-danger">{{ errors.credits }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock %}

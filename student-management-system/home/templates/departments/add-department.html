@@ -1,0 +1,101 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Add Department</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'department_list' %}">Departments</a></li>
+                        <li class="breadcrumb-item active">Add Department</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- /Page Header -->
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Display Success/Error Messages -->
+                        {% if messages %}
+                            <div class="alert alert-dismissible fade show" role="alert">
+                                {% for message in messages %}
+                                    {% if message.tags == 'success' %}
+                                        <div class="alert alert-success">{{ message }}</div>
+                                    {% elif message.tags == 'error' %}
+                                        <div class="alert alert-danger">{{ message }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+
+                        <form method="POST" action="{% url 'add_department' %}">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title"><span>Department Details</span></h5>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label for="department_id_input">Department ID Code</label>
+                                        <input type="text" class="form-control" id="department_id_input" name="department_id_input" value="{{ form_data.department_id_input|default:'' }}" required>
+                                        <small class="form-text text-muted">Enter a short code (e.g., CSE). Final ID will be auto-generated as TechAI-&lt;code&gt;-&lt;5-digit-number&gt;.</small>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label for="department_name">Department Name</label>
+                                        <input type="text" class="form-control" id="department_name" name="department_name" value="{{ form_data.department_name|default:'' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label for="head_of_department">Head of Department</label>
+                                        <select class="form-control" id="head_of_department" name="head_of_department">
+                                            <option value="">Select Head of Department</option>
+                                            {% for teacher in teachers %}
+                                                <option value="{{ teacher.id }}" {% if form_data.head_of_department == teacher.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ teacher.first_name }} {{ teacher.last_name }} ({{ teacher.teacher_id }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label for="department_start_date">Department Start Date</label>
+                                        <input type="date" class="form-control" id="department_start_date" name="department_start_date" value="{{ form_data.department_start_date|default:'' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="description">Description</label>
+                                        <textarea class="form-control" id="description" name="description" rows="4">{{ form_data.description|default:'' }}</textarea>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript Files -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock %}

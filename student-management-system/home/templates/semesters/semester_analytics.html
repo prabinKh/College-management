@@ -1,0 +1,147 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block title %}Analytics - {{ semester.semester_name }}{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Analytics - {{ semester.semester_name }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_list' %}">Semesters</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_detail' semester.slug %}">{{ semester.semester_name }}</a></li>
+                        <li class="breadcrumb-item active">Analytics</li>
+                    </ul>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'semesters:export_semester_data' semester.slug %}" class="btn btn-outline-info">Export Data</a>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Summary</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Students:</strong> {{ analytics.total_students }}</p>
+                        <p><strong>Total Subjects:</strong> {{ analytics.total_subjects }}</p>
+                        <p><strong>Total Teachers:</strong> {{ analytics.total_teachers }}</p>
+                        <p><strong>Total Batches:</strong> {{ analytics.total_batches }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Batch Utilization</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Batch</th>
+                                        <th>Enrolled</th>
+                                        <th>Max Capacity</th>
+                                        <th>Utilization (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in analytics.batch_stats %}
+                                    <tr>
+                                        <td>{{ batch.batch_name }}</td>
+                                        <td>{{ batch.enrolled_count }}</td>
+                                        <td>{{ batch.max_students }}</td>
+                                        <td>{{ batch.utilization_percentage }}%</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4">No batches found.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Subject Enrollment</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Enrolled</th>
+                                <th>Max Capacity</th>
+                                <th>Utilization (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in analytics.subject_stats %}
+                            <tr>
+                                <td>{{ subject.subject_name }}</td>
+                                <td>{{ subject.enrolled_count }}</td>
+                                <td>{{ subject.max_students|default:"Unlimited" }}</td>
+                                <td>{{ subject.utilization_percentage|default:"N/A" }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4">No subjects found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Trends</h4>
+            </div>
+            <div class="card-body">
+                <div id="enrollmentTrendChart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { margin-bottom: 1.5rem; }
+    .table-responsive { max-height: 400px; overflow-y: auto; }
+    #enrollmentTrendChart { height: 300px; }
+</style>
+
+<script>
+$(document).ready(function() {
+    var enrollmentData = {{ analytics.enrollment_trend|safe }};
+    var options = {
+        chart: { type: 'line', height: 300 },
+        series: [{ name: 'Students Enrolled', data: enrollmentData }],
+        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] }
+    };
+    var chart = new ApexCharts(document.querySelector("#enrollmentTrendChart"), options);
+    chart.render();
+});
+</script>
+{% endblock %}

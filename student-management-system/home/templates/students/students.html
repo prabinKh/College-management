@@ -1,0 +1,128 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Students</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Students</li>
+                    </ul>
+                </div>
+                <div class="col-auto text-right float-right ml-auto">
+                    <a href="#" class="btn btn-outline-primary mr-2">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                    <a href="{% url 'students:add_student' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        {% if messages %}
+            <div class="row">
+                <div class="col-sm-12">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Search Form -->
+        <div class="row mb-4">
+            <div class="col-sm-12">
+                <form method="get" action="{% url 'students:student_list' %}" class="form-inline">
+                    <div class="input-group w-100">
+                        <input type="text" name="q" class="form-control" placeholder="Search by name, ID, or email" value="{{ request.GET.q }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Student Table -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card card-table">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-center mb-0 datatable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Section</th>
+                                        <th>Email</th>
+                                        <th>Mobile Number</th>
+                                        <th class="text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for student in student_list %}
+                                    <tr>
+                                        <td>{{ student.student_id }}</td>
+                                        <td>
+                                            <a href="{% url 'students:view_student' student.slug %}">
+                                                {{ student.first_name }} {{ student.last_name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ student.student_class }}</td>
+                                        <td>{{ student.section }}</td>
+                                        <td>{{ student.email }}</td>
+                                        <td>{{ student.mobile_number }}</td>
+                                        <td class="text-right">
+                                            <div class="actions">
+                                                <a href="{% url 'students:edit_student' student.slug %}" class="btn btn-sm bg-success-light mr-2">
+                                                    <i class="fas fa-pen"></i>
+                                                </a>
+                                                <form method="post" action="{% url 'students:delete_student' student.slug %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm bg-danger-light border-0"
+                                                            onclick="return confirm('Delete this student?');">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No students found.</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Copyright © {% now "Y" %} Your Organization.</p>
+    </footer>
+</div>
+
+<!-- JS -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables/datatables.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3 class="page-title">Edit Teacher</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'teacher_list' %}">Teachers</a></li>
+                        <li class="breadcrumb-item active">Edit Teacher</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title">Basic Information</h5>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>First Name</label>
+                                        <input type="text" class="form-control" name="first_name" value="{{ form_data.first_name|default:'' }}">
+                                        {% if errors.first_name %}
+                                        <small class="text-danger">{{ errors.first_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Last Name</label>
+                                        <input type="text" class="form-control" name="last_name" value="{{ form_data.last_name|default:'' }}">
+                                        {% if errors.last_name %}
+                                        <small class="text-danger">{{ errors.last_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Gender</label>
+                                        <select class="form-control" name="gender">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male" {% if form_data.gender == 'Male' %}selected{% endif %}>Male</option>
+                                            <option value="Female" {% if form_data.gender == 'Female' %}selected{% endif %}>Female</option>
+                                            <option value="Others" {% if form_data.gender == 'Others' %}selected{% endif %}>Others</option>
+                                        </select>
+                                        {% if errors.gender %}
+                                        <small class="text-danger">{{ errors.gender }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Date of Birth</label>
+                                        <input type="date" class="form-control" name="date_of_birth" value="{{ form_data.date_of_birth|default:'' }}">
+                                        {% if errors.date_of_birth %}
+                                        <small class="text-danger">{{ errors.date_of_birth }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Mobile Number</label>
+                                        <input type="text" class="form-control" name="mobile" value="{{ form_data.mobile|default:'' }}">
+                                        {% if errors.mobile %}
+                                        <small class="text-danger">{{ errors.mobile }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Joining Date</label>
+                                        <input type="date" class="form-control" name="joining_date" value="{{ form_data.joining_date|default:'' }}">
+                                        {% if errors.joining_date %}
+                                        <small class="text-danger">{{ errors.joining_date }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Qualification</label>
+                                        <input type="text" class="form-control" name="qualification" value="{{ form_data.qualification|default:'' }}">
+                                        {% if errors.qualification %}
+                                        <small class="text-danger">{{ errors.qualification }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Teacher Image</label>
+                                        <input type="file" class="form-control" name="teacher_image">
+                                        {% if teacher.teacher_image %}
+                                        <small>Current image: <img src="{{ teacher.teacher_image.url }}" alt="Teacher Image" style="width: 50px; height: 50px;"></small>
+                                        {% endif %}
+                                        {% if errors.teacher_image %}
+                                        <small class="text-danger">{{ errors.teacher_image }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title">Login Information</h5>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Username</label>
+                                        <input type="text" class="form-control" name="username" value="{{ form_data.username|default:'' }}">
+                                        {% if errors.username %}
+                                        <small class="text-danger">{{ errors.username }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Email</label>
+                                        <input type="email" class="form-control" name="email" value="{{ form_data.email|default:'' }}">
+                                        {% if errors.email %}
+                                        <small class="text-danger">{{ errors.email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>New Password (optional)</label>
+                                        <input type="password" class="form-control" name="password1">
+                                        {% if errors.password1 %}
+                                        <small class="text-danger">{{ errors.password1 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Repeat New Password (optional)</label>
+                                        <input type="password" class="form-control" name="password2">
+                                        {% if errors.password2 %}
+                                        <small class="text-danger">{{ errors.password2 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5 class="form-title">Address Information</h5>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label>Address</label>
+                                        <textarea class="form-control" name="address">{{ form_data.address|default:'' }}</textarea>
+                                        {% if errors.address %}
+                                        <small class="text-danger">{{ errors.address }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>City</label>
+                                        <input type="text" class="form-control" name="city" value="{{ form_data.city|default:'' }}">
+                                        {% if errors.city %}
+                                        <small class="text-danger">{{ errors.city }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>State</label>
+                                        <input type="text" class="form-control" name="state" value="{{ form_data.state|default:'' }}">
+                                        {% if errors.state %}
+                                        <small class="text-danger">{{ errors.state }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Zip Code</label>
+                                        <input type="text" class="form-control" name="zip_code" value="{{ form_data.zip_code|default:'' }}">
+                                        {% if errors.zip_code %}
+                                        <small class="text-danger">{{ errors.zip_code }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <div class="form-group">
+                                        <label>Country</label>
+                                        <input type="text" class="form-control" name="country" value="{{ form_data.country|default:'' }}">
+                                        {% if errors.country %}
+                                        <small class="text-danger">{{ errors.country }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock %}

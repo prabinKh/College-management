@@ -1,0 +1,84 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block title %}Edit {{ semester_subject.subject.subject_name }}{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Edit {{ semester_subject.subject.subject_name }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_list' %}">Semesters</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_detail' semester.slug %}">{{ semester.semester_name }}</a></li>
+                        <li class="breadcrumb-item active">Edit Subject</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Edit Subject</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <select class="form-control" id="subject" name="subject" required>
+                            <option value="{{ semester_subject.subject.id }}">{{ semester_subject.subject.subject_name }} ({{ semester_subject.subject.class_name|default:"N/A" }})</option>
+                            {% for subject in subjects %}
+                            {% if subject.id != semester_subject.subject.id %}
+                            <option value="{{ subject.id }}">{{ subject.subject_name }} ({{ subject.class_name|default:"N/A" }})</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacher" class="form-label">Teacher</label>
+                        <select class="form-control" id="teacher" name="teacher">
+                            <option value="">Select Teacher (Optional)</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.id }}" {% if teacher.id == semester_subject.teacher.id %}selected{% endif %}>{{ teacher.get_full_name }} ({{ teacher.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="credits" class="form-label">Credits</label>
+                        <input type="number" class="form-control" id="credits" name="credits" value="{{ semester_subject.credits }}" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="hours_per_week" class="form-label">Hours per Week</label>
+                        <input type="number" class="form-control" id="hours_per_week" name="hours_per_week" value="{{ semester_subject.hours_per_week }}" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="max_students" class="form-label">Max Students (0 for unlimited)</label>
+                        <input type="number" class="form-control" id="max_students" name="max_students" value="{{ semester_subject.max_students }}" min="0">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Subject</button>
+                    <a href="{% url 'semesters:subject_detail' semester.slug semester_subject.id %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { margin-bottom: 1.5rem; }
+</style>
+{% endblock %}

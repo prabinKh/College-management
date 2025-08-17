@@ -1,0 +1,185 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block title %}Add Semester{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">Add Semester</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_list' %}">Semesters</a></li>
+                        <li class="breadcrumb-item active">Add Semester</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Toast container for notifications -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div id="liveToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="toastMessage"></div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">New Semester</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="addSemesterForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="semester_name" class="form-label">Semester Name</label>
+                        <input type="text" class="form-control" id="semester_name" name="semester_name" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="academic_year" class="form-label">Academic Year</label>
+                        <input type="text" class="form-control" id="academic_year" name="academic_year" required maxlength="20" placeholder="e.g., 2025-2026">
+                    </div>
+                    <div class="mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <select class="form-control" id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.department_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date (Optional)</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date">
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date (Optional)</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date">
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            {% for status, display in semester_status_choices %}
+                            <option value="{{ status }}" {% if status == 'upcoming' %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        Add Semester
+                    </button>
+                    <a href="{% url 'semesters:semester_list' %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { margin-bottom: 1.5rem; }
+    .alert-container { position: relative; z-index: 1050; }
+    .toast-container { z-index: 9999; }
+    .btn:disabled { opacity: 0.6; }
+    .spinner-border-sm { width: 1rem; height: 1rem; }
+</style>
+
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Wait for Bootstrap to be fully loaded
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded properly');
+        return;
+    }
+
+    // Initialize toast
+    const toastEl = document.getElementById('liveToast');
+    const toast = new bootstrap.Toast(toastEl);
+
+    // Function to show toast notifications
+    function showToast(type, message) {
+        const toastEl = document.getElementById('liveToast');
+        const toastBody = document.getElementById('toastMessage');
+        toastEl.className = 'toast align-items-center border-0';
+        if (type === 'success') {
+            toastEl.classList.add('text-bg-success');
+        } else if (type === 'error') {
+            toastEl.classList.add('text-bg-danger');
+        } else {
+            toastEl.classList.add('text-bg-warning');
+        }
+        toastBody.textContent = message;
+        toast.show();
+    }
+
+    // Form validation
+    $('#addSemesterForm').on('submit', function(e) {
+        const semesterName = $('#semester_name').val().trim();
+        const academicYear = $('#academic_year').val().trim();
+        const department = $('#department').val();
+        const startDate = $('#start_date').val();
+        const endDate = $('#end_date').val();
+
+        if (!semesterName || semesterName.length > 100) {
+            e.preventDefault();
+            showToast('error', 'Semester name is required and must be 100 characters or less');
+            return;
+        }
+        if (!academicYear || academicYear.length > 20) {
+            e.preventDefault();
+            showToast('error', 'Academic year is required and must be 20 characters or less');
+            return;
+        }
+        if (!department) {
+            e.preventDefault();
+            showToast('error', 'Please select a department');
+            return;
+        }
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            e.preventDefault();
+            showToast('error', 'End date must be after start date');
+            return;
+        }
+
+        const button = $('#submitButton');
+        const spinner = button.find('.spinner-border');
+        button.prop('disabled', true);
+        spinner.removeClass('d-none');
+    });
+
+    // Auto-hide alerts after 5 seconds
+    $('.alert').each(function() {
+        const alert = $(this);
+        setTimeout(function() {
+            alert.fadeOut();
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

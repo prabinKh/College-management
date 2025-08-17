@@ -1,0 +1,673 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block title %}{{ batch.batch_name }}{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h3 class="page-title">{{ batch.batch_name }}</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_list' %}">Semesters</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'semesters:semester_detail' semester.slug %}">{{ semester.semester_name }}</a></li>
+                        <li class="breadcrumb-item active">{{ batch.batch_name }}</li>
+                    </ul>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'semesters:semester_detail' semester.slug %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    {% if user.is_authenticated and user.is_admin %}
+                    <a href="{% url 'semesters:edit_batch' semester.slug batch.id %}" class="btn btn-outline-primary me-2">Edit Batch</a>
+                    <button class="btn btn-outline-danger delete-batch" data-batch-id="{{ batch.id }}">Delete Batch</button>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={% url 'semesters:edit_batch' semester.slug batch.id %}" class="btn btn-outline-primary me-2">Edit Batch (Login)</a>
+                    <button class="btn btn-outline-danger" disabled title="Login required to delete">Delete Batch (Login)</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Toast container for notifications -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div id="liveToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="toastMessage"></div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        {% if not user.is_authenticated %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            You are not logged in. Please <a href="{% url 'login' %}?next={{ request.path }}">log in</a> to perform actions like editing or deleting.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Batch Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Name:</strong> {{ batch.batch_name }}</p>
+                        <p><strong>Semester:</strong> {{ semester.semester_name }}</p>
+                        <p><strong>Academic Year:</strong> {{ batch.academic_year }}</p>
+                        <p><strong>Max Students:</strong> {{ batch.max_students }}</p>
+                        <p><strong>Enrolled:</strong> {{ enrolled_count }}</p>
+                        <p><strong>Available Spots:</strong> {{ available_spots }}</p>
+                        <p><strong>Status:</strong> {% if batch.is_active %}Active{% else %}Inactive{% endif %}</p>
+                        <p><strong>Teacher:</strong>
+                            {% if batch.teacher %}
+                            {{ batch.teacher.get_full_name|default:"Not Assigned" }}
+                            <button class="btn btn-sm btn-outline-danger remove-teacher" data-teacher-email="{{ batch.teacher.email }}">Remove</button>
+                            {% else %}
+                            <span class="text-muted">Not Assigned</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="mb-2">
+                            <label><strong>Change Teacher:</strong></label>
+                            <div class="input-group">
+                                <input type="text" id="teacherSearch" class="form-control" placeholder="Search teacher by email or name" autocomplete="off">
+                                <button class="btn btn-outline-primary" type="button" id="searchTeacherBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div id="teacherResults" class="list-group mt-2" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Enrolled Students</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Student ID</th>
+                                        <th>Class</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="enrolledStudentsTable">
+                                    {% if enrolled_students %}
+                                        {% for student in enrolled_students %}
+                                        <tr>
+                                            <td>{{ student.user.first_name }} {{ student.user.last_name }}</td>
+                                            <td>{{ student.user.email }}</td>
+                                            <td>{{ student.student_id|default:'N/A' }}</td>
+                                            <td>{{ student.student_class|default:'N/A' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No students enrolled in this batch</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Manage Students</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" id="studentSearch" class="form-control" placeholder="Search students by name, email, or ID" autocomplete="off">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Available Students</h5>
+                                <select multiple id="availableStudents" class="form-control" size="10"></select>
+                                <button class="btn btn-primary mt-2" id="addStudents" {% if not can_enroll_more %}disabled{% endif %}>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    Add Selected
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Enrolled Students</h5>
+                                <select multiple id="enrolledStudents" class="form-control" size="10">
+                                    {% if enrolled_students %}
+                                        {% for student in enrolled_students %}
+                                            <option value="{{ student.id }}">{{ student.user.first_name }} {{ student.user.last_name }} ({{ student.user.email }})</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>No enrolled students</option>
+                                    {% endif %}
+                                </select>
+                                <button class="btn btn-danger mt-2" id="removeStudents">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    Remove Selected
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteBatchModal" tabindex="-1" aria-labelledby="deleteBatchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteBatchModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the batch <strong>{{ batch.batch_name }}</strong>? This action cannot be undone and will remove all associated student enrollments.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBatch">
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Teacher Confirmation Modal -->
+<div class="modal fade" id="removeTeacherModal" tabindex="-1" aria-labelledby="removeTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeTeacherModalLabel">Confirm Teacher Removal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to remove the teacher from this batch?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveTeacher">
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Student Confirmation Modal -->
+<div class="modal fade" id="removeStudentModal" tabindex="-1" aria-labelledby="removeStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeStudentModalLabel">Confirm Student Removal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to remove the selected students from this batch? This will also remove their subject enrollments for this semester.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveStudent">
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { margin-bottom: 1.5rem; }
+    .alert-container { position: relative; z-index: 1050; }
+    .toast-container { z-index: 9999; }
+    .btn:disabled { opacity: 0.6; }
+    .spinner-border-sm { width: 1rem; height: 1rem; }
+    .teacher-result-item { cursor: pointer; padding: 8px 15px; }
+    .teacher-result-item:hover { background-color: #f8f9fa; }
+    select[multiple] { width: 100%; height: 200px; }
+    .table-responsive { max-height: 300px; overflow-y: auto; }
+</style>
+
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Wait for Bootstrap to be fully loaded
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded properly');
+        return;
+    }
+
+    // Initialize modals and toast
+    const deleteBatchModal = new bootstrap.Modal(document.getElementById('deleteBatchModal'));
+    const removeTeacherModal = new bootstrap.Modal(document.getElementById('removeTeacherModal'));
+    const removeStudentModal = new bootstrap.Modal(document.getElementById('removeStudentModal'));
+    const toastEl = document.getElementById('liveToast');
+    const toast = new bootstrap.Toast(toastEl);
+
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken') || $('meta[name=csrf-token]').attr('content') || '{{ csrf_token }}';
+
+    // Function to show toast notifications
+    function showToast(type, message) {
+        const toastEl = document.getElementById('liveToast');
+        const toastBody = document.getElementById('toastMessage');
+        toastEl.className = 'toast align-items-center border-0';
+        if (type === 'success') {
+            toastEl.classList.add('text-bg-success');
+        } else if (type === 'error') {
+            toastEl.classList.add('text-bg-danger');
+        } else {
+            toastEl.classList.add('text-bg-warning');
+        }
+        toastBody.textContent = message;
+        toast.show();
+    }
+
+    // Teacher search functionality
+    let teacherSearchTimeout;
+    const teacherSearchInput = $('#teacherSearch');
+    const teacherResults = $('#teacherResults');
+
+    teacherSearchInput.on('input', function() {
+        clearTimeout(teacherSearchTimeout);
+        const query = $(this).val().trim();
+
+        if (query.length < 2) {
+            teacherResults.hide();
+            return;
+        }
+
+        teacherSearchTimeout = setTimeout(() => {
+            $.ajax({
+                url: "{% url 'semesters:search_teachers' %}",
+                type: 'GET',
+                data: { q: query, batch_id: {{ batch.id }} },
+                success: function(data) {
+                    teacherResults.empty();
+                    if (data.teachers && data.teachers.length > 0) {
+                        data.teachers.forEach(teacher => {
+                            teacherResults.append(`
+                                <a href="#" class="list-group-item list-group-item-action teacher-result-item" 
+                                   data-email="${teacher.email}" data-name="${teacher.name}">
+                                    <strong>${teacher.name}</strong><br>
+                                    <small>${teacher.email}</small>
+                                </a>
+                            `);
+                        });
+                        teacherResults.show();
+                    } else {
+                        teacherResults.html('<div class="list-group-item">No teachers found</div>').show();
+                    }
+                },
+                error: function() {
+                    teacherResults.html('<div class="list-group-item text-danger">Error searching teachers</div>').show();
+                }
+            });
+        }, 300);
+    });
+
+    // Handle teacher selection
+    $(document).on('click', '.teacher-result-item', function(e) {
+        e.preventDefault();
+        const email = $(this).data('email');
+        const name = $(this).data('name');
+
+        if (confirm(`Assign ${name} as teacher for this batch?`)) {
+            assignTeacher(email);
+        }
+        teacherResults.hide();
+    });
+
+    // Assign teacher function
+    function assignTeacher(email) {
+        const button = $('#searchTeacherBtn');
+        const spinner = button.find('.spinner-border');
+        button.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: "{% url 'semesters:edit_batch' semester.slug batch.id %}",
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            data: { teacher_email: email },
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message || 'Teacher assigned successfully');
+                    window.location.reload();
+                } else {
+                    showToast('error', response.error || 'Failed to assign teacher');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error assigning teacher';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    if (xhr.status === 404) errorMessage = 'Teacher or batch not found';
+                    else if (xhr.status === 403) errorMessage = 'Permission denied';
+                    else errorMessage = xhr.statusText || errorMessage;
+                }
+                showToast('error', errorMessage);
+            },
+            complete: function() {
+                button.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    }
+
+    // Remove teacher
+    $('.remove-teacher').on('click', function() {
+        const teacherEmail = $(this).data('teacher-email');
+        $('#confirmRemoveTeacher').data('teacher-email', teacherEmail);
+        removeTeacherModal.show();
+    });
+
+    $('#confirmRemoveTeacher').on('click', function() {
+        const teacherEmail = $(this).data('teacher-email');
+        const button = $(this);
+        const spinner = button.find('.spinner-border');
+        button.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: "{% url 'semesters:edit_batch' semester.slug batch.id %}",
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            data: { teacher_email: '' },
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message || 'Teacher removed successfully');
+                    window.location.reload();
+                } else {
+                    showToast('error', response.error || 'Failed to remove teacher');
+                }
+                removeTeacherModal.hide();
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error removing teacher';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    if (xhr.status === 404) errorMessage = 'Teacher or batch not found';
+                    else if (xhr.status === 403) errorMessage = 'Permission denied';
+                    else errorMessage = xhr.statusText || errorMessage;
+                }
+                showToast('error', errorMessage);
+                removeTeacherModal.hide();
+            },
+            complete: function() {
+                button.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Load students function
+    function loadStudents(query = '') {
+        $.ajax({
+            url: "{% url 'semesters:search_students' %}",
+            type: 'GET',
+            data: {
+                q: query,
+                semester_id: {{ semester.id }},
+                batch_id: {{ batch.id }}
+            },
+            success: function(data) {
+                $('#availableStudents').empty();
+                if (data.students && data.students.length > 0) {
+                    data.students.forEach(student => {
+                        $('#availableStudents').append(
+                            `<option value="${student.id}">${student.name} (${student.email})</option>`
+                        );
+                    });
+                } else {
+                    $('#availableStudents').append('<option disabled>No available students found</option>');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error loading students';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    if (xhr.status === 404) errorMessage = 'Semester or batch not found';
+                    else if (xhr.status === 403) errorMessage = 'Permission denied';
+                    else errorMessage = xhr.statusText || errorMessage;
+                }
+                showToast('error', errorMessage);
+            }
+        });
+    }
+
+    // Initial load of available students
+    loadStudents();
+
+    // Student search
+    $('#studentSearch').on('input', function() {
+        loadStudents($(this).val());
+    });
+
+    // Add students
+    $('#addStudents').on('click', function() {
+        const selectedStudents = $('#availableStudents').val();
+        if (!selectedStudents || selectedStudents.length === 0) {
+            showToast('error', 'Please select at least one student to add');
+            return;
+        }
+
+        const formData = new FormData();
+        selectedStudents.forEach(id => formData.append('students', id));
+
+        const button = $(this);
+        const spinner = button.find('.spinner-border');
+        button.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: "{% url 'semesters:add_student_to_batch' semester.slug batch.id %}",
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    window.location.reload();
+                    if (response.warnings) {
+                        response.warnings.forEach(w => showToast('warning', w));
+                    }
+                } else {
+                    showToast('error', response.error || 'Failed to add students');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error adding students';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    if (xhr.status === 404) errorMessage = 'Batch or semester not found';
+                    else if (xhr.status === 403) errorMessage = 'Permission denied';
+                    else errorMessage = xhr.statusText || errorMessage;
+                }
+                showToast('error', errorMessage);
+            },
+            complete: function() {
+                button.prop('disabled', !{{ can_enroll_more|yesno:'true,false' }});
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Remove students
+    $('#removeStudents').on('click', function() {
+        const selectedStudents = $('#enrolledStudents').val();
+        if (!selectedStudents || selectedStudents.length === 0) {
+            showToast('error', 'Please select at least one student to remove');
+            return;
+        }
+        $('#confirmRemoveStudent').data('students', selectedStudents);
+        removeStudentModal.show();
+    });
+
+    $('#confirmRemoveStudent').on('click', function() {
+        const selectedStudents = $(this).data('students');
+        const formData = new FormData();
+        selectedStudents.forEach(id => formData.append('students', id));
+
+        const button = $(this);
+        const spinner = button.find('.spinner-border');
+        button.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: "{% url 'semesters:remove_student_from_batch' semester.slug batch.id %}",
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    window.location.reload();
+                    if (response.warnings) {
+                        response.warnings.forEach(w => showToast('warning', w));
+                    }
+                } else {
+                    showToast('error', response.error || 'Failed to remove students');
+                }
+                removeStudentModal.hide();
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error removing students';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    if (xhr.status === 404) errorMessage = 'Batch or semester not found';
+                    else if (xhr.status === 403) errorMessage = 'Permission denied';
+                    else errorMessage = xhr.statusText || errorMessage;
+                }
+                showToast('error', errorMessage);
+                removeStudentModal.hide();
+            },
+            complete: function() {
+                button.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Delete batch
+    $('.delete-batch').on('click', function() {
+        const batchId = $(this).data('batch-id');
+        $('#confirmDeleteBatch').data('batch-id', batchId);
+        deleteBatchModal.show();
+    });
+
+    $('#confirmDeleteBatch').on('click', function() {
+        const batchId = $(this).data('batch-id');
+        const button = $(this);
+        const spinner = button.find('.spinner-border');
+        button.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: "{% url 'semesters:delete_batch' semester.slug batch.id %}",
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message);
+                    deleteBatchModal.hide();
+                    window.location.href = "{% url 'semesters:semester_detail' semester.slug %}";
+                } else {
+                    showToast('error', response.error || 'Failed to delete batch');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error deleting batch';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || errorMessage;
+                } catch (e) {
+                    if (xhr.status === 404) errorMessage = 'Batch or semester not found';
+                    else if (xhr.status === 403) errorMessage = 'Permission denied';
+                    else errorMessage = xhr.statusText || errorMessage;
+                }
+                showToast('error', errorMessage);
+            },
+            complete: function() {
+                button.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Hide teacher results when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#teacherSearch, #teacherResults').length) {
+            teacherResults.hide();
+        }
+    });
+
+    // Auto-hide alerts after 5 seconds
+    $('.alert').each(function() {
+        const alert = $(this);
+        setTimeout(function() {
+            alert.fadeOut();
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

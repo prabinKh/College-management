@@ -1,0 +1,277 @@
+{% extends 'Home/base.html' %}
+{% load static %}
+
+{% block body %}
+<style>
+    .student-details-card { border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .section-title { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+    .info-list li { display: flex; align-items: center; margin-bottom: 10px; }
+    .info-list .title-span { font-weight: 600; color: #333; width: 200px; }
+    .info-list .info-span { color: #555; }
+    .profile-img { border-radius: 50%; border: 2px solid #007bff; }
+    .progress { height: 8px; margin-top: 5px; }
+    .blue-box { background: #e9f0ff; border-radius: 8px; padding: 15px; text-align: center; }
+    .blue-box h3 { color: #007bff; font-size: 24px; margin-bottom: 5px; }
+    .blue-box p { color: #555; margin: 0; }
+    .settings-form .form-group { margin-bottom: 15px; }
+    .settings-form label { font-weight: 600; }
+    .btn-primary { transition: background-color 0.3s; }
+    .btn-primary:hover { background-color: #0056b3; }
+</style>
+
+<div class="page-wrapper">
+    <div class="content container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-sm-12">
+                    <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary mr-2">
+                        <i class="fas fa-arrow-left"></i> Back to Students
+                    </a>
+                    <h3 class="page-title">Student Details</h3>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'students:student_list' %}">Students</a></li>
+                        <li class="breadcrumb-item active">Details</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        {% if messages %}
+            <div class="row">
+                <div class="col-sm-12">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Student Details -->
+        <div class="card student-details-card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="about-info">
+                            <h4 class="section-title">Student Information</h4>
+                            <div class="media mt-3 align-items-center">
+                                {% if student.student_image %}
+                                    <img src="{{ student.student_image.url }}" class="profile-img mr-4" alt="{{ student.first_name }} {{ student.last_name }}" style="width: 120px; height: 120px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{% static 'assets/img/default-student.jpg' %}" class="profile-img mr-4" alt="Default Image" style="width: 120px; height: 120px; object-fit: cover;">
+                                {% endif %}
+                                <div class="media-body">
+                                    <ul class="info-list">
+                                        <li>
+                                            <span class="title-span">Full Name:</span>
+                                            <span class="info-span">{{ student.first_name }} {{ student.last_name }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Student ID:</span>
+                                            <span class="info-span">{{ student.student_id }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Email:</span>
+                                            <span class="info-span">{{ student.email }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Mobile:</span>
+                                            <span class="info-span">{{ student.mobile_number }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Gender:</span>
+                                            <span class="info-span">{{ student.gender }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Date of Birth:</span>
+                                            <span class="info-span">{{ student.date_of_birth }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Class:</span>
+                                            <span class="info-span">{{ student.student_class }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Section:</span>
+                                            <span class="info-span">{{ student.section }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Admission Number:</span>
+                                            <span class="info-span">{{ student.admission_number }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Religion:</span>
+                                            <span class="info-span">{{ student.religion }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Joining Date:</span>
+                                            <span class="info-span">{{ student.joining_date }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <h5 class="section-title">Parent Information</h5>
+                                    <ul class="info-list">
+                                        <li>
+                                            <span class="title-span">Father's Name:</span>
+                                            <span class="info-span">{{ student.parent.father_name }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Father's Occupation:</span>
+                                            <span class="info-span">{{ student.parent.father_occupation|default:"Not specified" }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Father's Mobile:</span>
+                                            <span class="info-span">{{ student.parent.father_mobile }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Father's Email:</span>
+                                            <span class="info-span">{{ student.parent.father_email }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Mother's Name:</span>
+                                            <span class="info-span">{{ student.parent.mother_name }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Mother's Occupation:</span>
+                                            <span class="info-span">{{ student.parent.mother_occupation|default:"Not specified" }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Mother's Mobile:</span>
+                                            <span class="info-span">{{ student.parent.mother_mobile }}</span>
+                                        </li>
+                                        <li>
+                                            <span class="title-span">Mother's Email:</span>
+                                            <span class="info-span">{{ student.parent.mother_email }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <h5 class="section-title">Permanent Address</h5>
+                                    <p>{{ student.parent.permanent_address|default:"Not specified" }}</p>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <h5 class="section-title">Present Address</h5>
+                                    <p>{{ student.parent.present_address|default:"Not specified" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="skill-info">
+                            <h4 class="section-title">Skills</h4>
+                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry, simply dummy
+                                text of the printing and typesetting industry</p>
+                            <ul class="info-list">
+                                <li>
+                                    <label>Lorem Ipsum is simply</label>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                            role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"
+                                            style="width: 75%"></div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <label>Lorem Ipsum is simply</label>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                            role="progressbar" aria-valuenow="69" aria-valuemin="0" aria-valuemax="100"
+                                            style="width: 69%"></div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <label>Lorem Ipsum is simply</label>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                            role="progressbar" aria-valuenow="86" aria-valuemin="0" aria-valuemax="100"
+                                            style="width: 86%"></div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <label>Lorem Ipsum is simply</label>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                            role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"
+                                            style="width: 65%"></div>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <h5 class="section-title">Education</h5>
+                                    <p class="mt-3">Secondary Schooling at xyz school of secondary education, Mumbai.</p>
+                                    <p>Higher Secondary Schooling at xyz school of higher secondary education, Mumbai.</p>
+                                    <p>Bachelor of Science at Abc College of Art and Science, Chennai.</p>
+                                    <p>Master of Science at Cdm College of Engineering and Technology, Pune.</p>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <h5 class="section-title">Certificates</h5>
+                                    <p class="mt-3">1st Prize in Running Competition.</p>
+                                    <p>Lorem Ipsum is simply dummy text.</p>
+                                    <p>Won overall star student in higher secondary education.</p>
+                                    <p>Lorem Ipsum is simply dummy text.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="skill-info">
+                            <h4 class="section-title">Settings</h4>
+                            <form class="settings-form">
+                                <div class="row mt-3">
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Username</label>
+                                            <input type="text" class="form-control" value="{{ student.email }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-group">
+                                            <label>Current Password</label>
+                                            <input type="password" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-group">
+                                            <label>New Password</label>
+                                            <input type="password" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Copyright © {% now "Y" %} Your Organization.</p>
+    </footer>
+</div>
+
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/popper.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock %}
